@@ -17,14 +17,14 @@ module.exports = (grunt) ->
   packageJson = grunt.file.readJSON('package.json')
 
   # configurable paths
-  yeomanConfig =
+  frontendConfig =
     appName: "mylibsass"
     app: "src"
     templ: "../templates/markup"
     dist: "../static"
 
   grunt.initConfig
-    yeoman: yeomanConfig
+    frontend: frontendConfig
     pkg: packageJson
 
     # watch and livereload
@@ -33,23 +33,23 @@ module.exports = (grunt) ->
         livereload: true
 
       coffee:
-        files: ["<%= yeoman.app %>/scripts/**/*.coffee"]
+        files: ["<%= frontend.app %>/scripts/**/*.coffee"]
         tasks: [
           "coffeelint"
-          "coffee"
+          "coffee:serve"
           "copy:serve"
-          "notify:dist"
+          "notify"
         ]
 
       js:
         files: [
           # '.tmp/scripts/{,*/}*.js',
-          '<%= yeoman.app %>/scripts/**/*.js'
+          '<%= frontend.app %>/scripts/**/*.js'
         ]
         tasks: ["concat:serve"]
 
       sass:
-        files: ["<%= yeoman.app %>/styles/{,*/}*.{scss,sass}"]
+        files: ["<%= frontend.app %>/styles/{,*/}*.{scss,sass}"]
         tasks: [
           "sass:serve"
           "autoprefixer:dist"
@@ -57,10 +57,11 @@ module.exports = (grunt) ->
         ]
 
       images:
-        files: ["<%= yeoman.app %>/images/{,*/}*", "<%= yeoman.app %>/fonts/{,*/}*", "<%= yeoman.app %>/images/!**/lossy/**"]
+        files: ["<%= frontend.app %>/images/{,*/}*", "<%= frontend.app %>/fonts/{,*/}*", "<%= frontend.app %>/images/!**/lossy/**"]
         tasks: [
           "copy:images"
         ]
+
 
     # clean working direcotry
     clean:
@@ -70,12 +71,12 @@ module.exports = (grunt) ->
       dist:
         files: [
           dot: true
-          src: [".tmp", "<%= yeoman.dist %>/*", "!<%= yeoman.dist %>/.git*"]
+          src: [".tmp", "<%= frontend.dist %>/*", "!<%= frontend.dist %>/.git*"]
         ]
 
     # lint coffeescript
     coffeelint:
-      app: ['<%= yeoman.app %>/scripts/**/*.coffee', 'gruntfile.coffee']
+      app: ['<%= frontend.app %>/scripts/**/*.coffee', 'gruntfile.coffee']
 
       options:
         max_line_length:
@@ -85,48 +86,57 @@ module.exports = (grunt) ->
         space_operators:
           level: 'warn'
 
+
     jshint:
       options:
         jshintrc: ".jshintrc"
         force: true
 
-      all: ["Gruntfile.js", "<%= yeoman.app %>/scripts/**/*.js", "!<%= yeoman.app %>/scripts/vendor/*"]
+      all: ["Gruntfile.js", "<%= frontend.app %>/scripts/**/*.js", "!<%= frontend.app %>/scripts/vendor/*"]
+
 
     coffee:
+      options:
+        bare: no
+
       dist:
+        files:
+          ".tmp/scripts/main.js": [
+            "<%= frontend.app %>/scripts/plugins/**/*.coffee"
+            "<%= frontend.app %>/scripts/*.coffee"
+          ]
+
+      serve:
         options:
           sourceMap: yes
           sourceMapDir: '.tmp/scripts/'
           bare: no
-        files:
-          ".tmp/scripts/main.js": [
-            "<%= yeoman.app %>/scripts/plugins/**/*.coffee"
-            "<%= yeoman.app %>/scripts/*.coffee"
-          ]
+        files: "<%= coffee.dist.files %>"
 
     # compile sass with source maps
     sass:
       options:
-        imagePath: '<%= yeoman.app %>/images'
+        imagePath: '<%= frontend.app %>/images'
+        outputStyle: "nested"
 
       serve:
         options:
-          outputStyle: "compressed"
           sourceMap: true
 
         files: [{
           expand: true
-          cwd: '<%= yeoman.app %>/styles'
+          cwd: '<%= frontend.app %>/styles'
           src: ['*.{scss,sass}']
-          dest: '.tmp/styles'
+          dest: '<%= frontend.dist %>/styles'
           ext: '.css'
         }]
 
       dist:
         options:
-          style: "expanded"
+          sourceMap: false
 
         files: "<%= sass.serve.files %>"
+
 
 
     # notify messages
@@ -159,12 +169,12 @@ module.exports = (grunt) ->
               DEBUG: false
 
         files:
-          "<%= yeoman.dist %>/scripts/libs.js": [
-            "<%= yeoman.app %>/scripts/lib/jquery/*.js"
-            "<%= yeoman.app %>/scripts/lib/lodash/*.js"
-            "<%= yeoman.app %>/scripts/lib/signals/*.js"
-            "<%= yeoman.app %>/scripts/lib/**/*.js"
-            "<%= yeoman.app %>/scripts/vendor/*.js"
+          "<%= frontend.dist %>/scripts/libs.js": [
+            "<%= frontend.app %>/scripts/lib/jquery/*.js"
+            "<%= frontend.app %>/scripts/lib/lodash/*.js"
+            "<%= frontend.app %>/scripts/lib/signals/*.js"
+            "<%= frontend.app %>/scripts/lib/**/*.js"
+            "<%= frontend.app %>/scripts/vendor/*.js"
           ]
 
       coffee:
@@ -175,7 +185,7 @@ module.exports = (grunt) ->
           sourceMap: yes
           sourceMapIn: ".tmp/scripts/main.js.map"
         files:
-          "<%= yeoman.dist %>/scripts/main.js": '.tmp/scripts/main.js'
+          "<%= frontend.dist %>/scripts/main.js": '.tmp/scripts/main.js'
 
     concat:
       serve:
@@ -189,9 +199,9 @@ module.exports = (grunt) ->
       dist:
         files: [
           expand: true
-          cwd: "<%= yeoman.dist %>/images"
+          cwd: "<%= frontend.dist %>/images"
           src: "{,*/}*.{png,jpg,jpeg}"
-          dest: "<%= yeoman.dist %>/images"
+          dest: "<%= frontend.dist %>/images"
         ]
 
 
@@ -200,9 +210,9 @@ module.exports = (grunt) ->
       dist:
         files: [
           expand: true
-          cwd: "<%= yeoman.app %>/images"
+          cwd: "<%= frontend.app %>/images"
           src: "{,*/}*.svg"
-          dest: "<%= yeoman.app %>/images"
+          dest: "<%= frontend.app %>/images"
         ]
 
 
@@ -212,8 +222,8 @@ module.exports = (grunt) ->
         files: [
           expand: true
           dot: true
-          cwd: "<%= yeoman.app %>"
-          dest: "<%= yeoman.dist %>"
+          cwd: "<%= frontend.app %>"
+          dest: "<%= frontend.dist %>"
           src: ["*.{ico,png,txt}", ".htaccess"]
         ]
 
@@ -221,8 +231,8 @@ module.exports = (grunt) ->
         files: [
           expand: true
           dot: true
-          cwd: "<%= yeoman.app %>"
-          dest: "<%= yeoman.dist %>"
+          cwd: "<%= frontend.app %>"
+          dest: "<%= frontend.dist %>"
           src: ["images/{,*/}*.{png,jpg,jpeg,webp,gif,svg}", "fonts/*", "!images/**/lossy/**"]
         ]
 
@@ -230,19 +240,8 @@ module.exports = (grunt) ->
         files: [
           expand: true
           dot: true
-          cwd: ".tmp/styles"
-          dest: "<%= yeoman.dist %>/styles"
-          src: ["*.{css,map}"]
-        ,
-          expand: true
-          cwd: ".tmp/images"
-          dest: "<%= yeoman.dist %>/images"
-          src: ["generated/*"]
-        ,
-          expand: true
-          dot: true
           cwd: ".tmp/scripts"
-          dest: "<%= yeoman.dist %>/scripts"
+          dest: "<%= frontend.dist %>/scripts"
           src: ["*.{js,map,coffee}"]
         ]
 
@@ -255,8 +254,8 @@ module.exports = (grunt) ->
 
       minify:
         expand: true
-        cwd: "<%= yeoman.dist %>/styles"
-        dest: "<%= yeoman.dist %>/styles"
+        cwd: "<%= frontend.dist %>/styles"
+        dest: "<%= frontend.dist %>/styles"
         src: ["*.css"]
 
 
@@ -267,7 +266,7 @@ module.exports = (grunt) ->
         map: false
 
       dist:
-        src: '.tmp/styles/*.css'
+        src: '<%= frontend.dist %>/styles/*.css'
 
       serve:
         options:
@@ -279,12 +278,12 @@ module.exports = (grunt) ->
     # run heavy tasks here concurrently
     concurrent:
       serve: [
-        "coffee"
+        "coffee:serve"
         "sass:serve"
       ]
 
       dist: [
-        "coffee"
+        "coffee:dist"
         "sass:dist"
       ]
 
@@ -311,7 +310,7 @@ module.exports = (grunt) ->
     "svgmin"
     "copy"
     "cssmin"
-    "notify:dist"
+    "notify"
   ]
 
   # $ grunt
